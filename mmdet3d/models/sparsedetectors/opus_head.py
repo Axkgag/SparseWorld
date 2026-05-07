@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch_scatter
+try:
+    import torch_scatter
+except Exception:
+    torch_scatter = None
 from mmcv.runner import force_fp32, BaseModule
 from mmcv.ops import knn, Voxelization
 from mmdet.core import multi_apply
@@ -20,6 +23,22 @@ colors = torch.tensor([
     [0.00, 0.00, 1.00],   # 蓝 Blue
     [0.50, 0.00, 0.50],   # 紫 Purple
 ])
+
+
+def _scatter_max(src, index, dim=0):
+    if torch_scatter is not None:
+        return torch_scatter.scatter_max(src, index, dim)[0]
+    if index.numel() == 0:
+        out_shape = list(src.shape)
+        out_shape[dim] = 0
+        return src.new_empty(out_shape)
+    out_size = int(index.max().item()) + 1
+    out_shape = list(src.shape)
+    out_shape[dim] = out_size
+    out = src.new_full(out_shape, float('-inf'))
+    expand_index = index.view(-1, *([1] * (src.dim() - 1))).expand_as(src)
+    out.scatter_reduce_(dim, expand_index, src, reduce='amax', include_self=True)
+    return out
 
 
 @HEADS.register_module()
@@ -589,7 +608,7 @@ class OPUSHead(BaseModule):
                 index = ((refine_pts - pc_range[:3]) // self.voxel_size).long()
                 mask = torch.logical_and(index >= 0, index < voxel_num).all(-1)
                 voxels, unq_inv, pts_num = torch.unique(index[mask], return_inverse=True, return_counts=True, dim=0)
-                scores = torch_scatter.scatter_max(cls_scores[mask], unq_inv, 0)[0]
+                scores = _scatter_max(cls_scores[mask], unq_inv, 0)
             occ = scores.new_zeros((voxel_num[0], voxel_num[1],
                                     voxel_num[2], self.num_classes))
             occ[voxels[:, 0], voxels[:, 1], voxels[:, 2]] = scores

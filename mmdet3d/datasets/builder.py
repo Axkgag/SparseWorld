@@ -3,8 +3,21 @@ import platform
 
 from mmcv.utils import Registry, build_from_cfg
 
-from mmdet.datasets import DATASETS as MMDET_DATASETS
-from mmdet.datasets.builder import _concat_dataset
+try:
+    from mmdet.datasets import DATASETS as MMDET_DATASETS
+except Exception:
+    from mmdet.registry import DATASETS as MMDET_DATASETS
+try:
+    from mmdet.datasets.builder import _concat_dataset
+except Exception:
+    def _concat_dataset(cfg, default_args=None):
+        from mmdet.datasets.dataset_wrappers import ConcatDataset
+        datasets = []
+        for ann_file in cfg['ann_file']:
+            data_cfg = cfg.copy()
+            data_cfg['ann_file'] = ann_file
+            datasets.append(build_dataset(data_cfg, default_args))
+        return ConcatDataset(datasets)
 
 if platform.system() != 'Windows':
     # https://github.com/pytorch/pytorch/issues/973
@@ -21,8 +34,13 @@ PIPELINES = Registry('pipeline')
 
 
 def build_dataset(cfg, default_args=None):
-    from mmdet.datasets.dataset_wrappers import (ClassBalancedDataset,
-                                                 ConcatDataset, RepeatDataset)
+    try:
+        from mmdet.datasets.dataset_wrappers import (ClassBalancedDataset,
+                                                     ConcatDataset, RepeatDataset)
+    except Exception:
+        from torch.utils.data import ConcatDataset
+        ClassBalancedDataset = None
+        RepeatDataset = None
     if isinstance(cfg, (list, tuple)):
         dataset = ConcatDataset([build_dataset(c, default_args) for c in cfg])
     elif cfg['type'] == 'ConcatDataset':
@@ -30,9 +48,13 @@ def build_dataset(cfg, default_args=None):
             [build_dataset(c, default_args) for c in cfg['datasets']],
             cfg.get('separate_eval', True))
     elif cfg['type'] == 'RepeatDataset':
+        if RepeatDataset is None:
+            raise RuntimeError('RepeatDataset is unavailable in current mmdet version.')
         dataset = RepeatDataset(
             build_dataset(cfg['dataset'], default_args), cfg['times'])
     elif cfg['type'] == 'ClassBalancedDataset':
+        if ClassBalancedDataset is None:
+            raise RuntimeError('ClassBalancedDataset is unavailable in current mmdet version.')
         dataset = ClassBalancedDataset(
             build_dataset(cfg['dataset'], default_args), cfg['oversample_thr'])
     elif isinstance(cfg.get('ann_file'), (list, tuple)):
@@ -42,3 +64,37 @@ def build_dataset(cfg, default_args=None):
     else:
         dataset = build_from_cfg(cfg, MMDET_DATASETS, default_args)
     return dataset
+
+
+def build_dataloader(dataset,
+                     samples_per_gpu,
+                     workers_per_gpu,
+                     num_gpus=1,
+                     dist=False,
+                     shuffle=True,
+                     seed=None,
+                     runner_type='EpochBasedRunner',
+                     persistent_workers=False,
+                     **kwargs):
+    from torch.utils.data import DataLoader
+    from torch.utils.data.distributed import DistributedSampler
+    from mmcv.parallel import collate
+
+    if dist:
+        sampler = DistributedSampler(dataset, shuffle=shuffle)
+        batch_size = samples_per_gpu
+        shuffle = False
+    else:
+        sampler = None
+        batch_size = samples_per_gpu * max(1, num_gpus)
+
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        sampler=sampler,
+        shuffle=shuffle if sampler is None else False,
+        collate_fn=lambda x: collate(x, samples_per_gpu=samples_per_gpu),
+        num_workers=workers_per_gpu,
+        pin_memory=False,
+        drop_last=False,
+        persistent_workers=persistent_workers)

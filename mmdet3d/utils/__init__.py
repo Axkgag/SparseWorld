@@ -1,7 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from mmcv.utils import Registry, build_from_cfg, print_log
 
-from .collect_env import collect_env
+try:
+    from .collect_env import collect_env
+except Exception:
+    collect_env = lambda: {}
 from .compat_cfg import compat_cfg
 from .logger import get_root_logger
 from .misc import find_latest_checkpoint
@@ -16,3 +19,10 @@ __all__ = [
     "patch_runner",
     "find_latest_checkpoint",
 ]
+
+
+def register_all_modules(init_default_scope=True):
+    # Compatibility entrypoint expected by MMEngine/MMDet3 auto-import logic.
+    # Importing these packages triggers @register_module side effects.
+    import mmdet3d.datasets  # noqa: F401
+    import mmdet3d.models  # noqa: F401

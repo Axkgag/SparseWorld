@@ -220,7 +220,26 @@ class NuScenesDatasetOccpancy4DTraj(NuScenesDataset):
         """
         data = mmcv.load(ann_file, file_format='pkl')
         data_infos = list(sorted(data['infos'], key=lambda e: e['timestamp']))
-        infos = []
+
+        # Backward-compatible normalization: some generated info files do not
+        # contain scene_name/frame_idx (they keep scene_token + occ_path).
+        scene_frame_counter = {}
+        for info in data_infos:
+            if 'scene_name' not in info:
+                occ_path = info.get('occ_path', '')
+                if isinstance(occ_path, str) and '/gts/' in occ_path:
+                    # e.g. ./data/nuscenes/gts/scene-0161/<token>
+                    parts = occ_path.replace('\\', '/').split('/')
+                    if 'gts' in parts and parts.index('gts') + 1 < len(parts):
+                        info['scene_name'] = parts[parts.index('gts') + 1]
+                if 'scene_name' not in info:
+                    info['scene_name'] = info.get('scene_token', 'unknown_scene')
+
+            if 'frame_idx' not in info:
+                scene_key = info.get('scene_token', info['scene_name'])
+                frame_idx = scene_frame_counter.get(scene_key, 0)
+                info['frame_idx'] = frame_idx
+                scene_frame_counter[scene_key] = frame_idx + 1
 
         # data_infos = data_infos[:39] #for debug
         self.metadata = data['metadata']

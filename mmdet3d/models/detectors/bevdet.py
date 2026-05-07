@@ -8,7 +8,11 @@ from mmdet.models import DETECTORS
 from .. import builder
 from .centerpoint import CenterPoint
 from mmdet.models.backbones.resnet import ResNet
-from mmdet3d.models.backbones.swin import SwinTransformer
+try:
+    from mmdet3d.models.backbones.swin import SwinTransformer
+except Exception:
+    class SwinTransformer:  # type: ignore
+        pass
 
 @DETECTORS.register_module()
 class BEVDet(CenterPoint):

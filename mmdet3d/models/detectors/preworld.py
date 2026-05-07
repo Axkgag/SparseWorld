@@ -13,7 +13,10 @@ import time
 from .preworld_temporal_traj import Scatter
 from .loss import CE_ssc_loss, sem_scal_loss, geo_scal_loss, l1_loss
 from .lovasz_softmax import lovasz_softmax
-from IPython import embed
+try:
+    from IPython import embed
+except Exception:
+    embed = None
 
 # occ3d-nuscenes
 nusc_class_frequencies = np.array([1163161, 2309034, 188743, 2997643, 20317180, 852476, 243808, 2457947, 
@@ -308,4 +311,3 @@ class PreWorld(BEVStereo4DOCC):
             losses.update(loss_sup_semantic)
 
         return losses
-

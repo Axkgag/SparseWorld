@@ -10,7 +10,10 @@ from os import path as osp
 import mmcv
 import torch
 import torch.distributed as dist
-from mmcv import Config, DictAction
+try:
+    from mmcv import Config, DictAction
+except ImportError:
+    from mmengine.config import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist
 
 from mmdet import __version__ as mmdet_version
@@ -18,18 +21,24 @@ from mmdet3d import __version__ as mmdet3d_version
 from mmdet3d.apis import init_random_seed, train_model
 from mmdet3d.datasets import build_dataset
 from mmdet3d.models import build_model
-from mmdet3d.utils import collect_env, get_root_logger
-from mmdet.apis import set_random_seed
+from mmdet3d.utils.logger import get_root_logger
+from mmdet3d.utils.patch import patch_config
+try:
+    from mmdet3d.utils.collect_env import collect_env
+except Exception:
+    collect_env = lambda: {}
+try:
+    from mmdet.apis import set_random_seed
+except Exception:
+    from mmdet3d.apis.train import set_random_seed
 from mmseg import __version__ as mmseg_version
-
-from mmdet3d.utils import patch_config
 
 try:
     # If mmdet version > 2.20.0, setup_multi_processes would be imported and
     # used from mmdet instead of mmdet3d.
     from mmdet.utils import setup_multi_processes
 except ImportError:
-    from mmdet3d.utils import setup_multi_processes
+    from mmdet3d.utils.setup_env import setup_multi_processes
 torch.multiprocessing.set_start_method('spawn')
 
 def parse_args():

@@ -15,7 +15,10 @@ from .opus_transformer import OPUSSelfAttention, OPUSCrossAttention
 from mmcv.cnn import bias_init_with_prob
 from mmdet3d.models.detectors.loss import CE_ssc_loss, sem_scal_loss, geo_scal_loss, l1_loss, l2_loss
 from mmdet3d.models.detectors.lovasz_softmax import lovasz_softmax
-from IPython import embed
+try:
+    from IPython import embed
+except Exception:
+    embed = None
 from mmdet3d.models.sparsedetectors.bbox.utils import decode_points, encode_points, trans_coords,get_matched_inds
 from mmdet3d.models.heads import DownScaleModule3DCustom
 from mmdet3d.core.bbox import Box3DMode, Coord3DMode, LiDARInstance3DBoxes

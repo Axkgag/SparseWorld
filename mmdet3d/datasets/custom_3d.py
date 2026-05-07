@@ -7,7 +7,7 @@ import mmcv
 import numpy as np
 from torch.utils.data import Dataset
 
-from ..core.bbox import get_box_type
+from ..core.bbox.structures.utils import get_box_type
 from .builder import DATASETS
 from .pipelines import Compose
 from .utils import extract_result_dict, get_loading_pipeline

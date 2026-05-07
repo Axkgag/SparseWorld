@@ -13,6 +13,29 @@ from mmdet.models.detectors import BaseDetector
 class Base3DDetector(BaseDetector):
     """Base class for detectors."""
 
+    # Bridge old MMDet2-style forward_train/forward_test API to MMDet3/MMEngine
+    # abstract methods required by BaseDetector.
+    def loss(self, batch_inputs, batch_data_samples=None):
+        if isinstance(batch_inputs, dict):
+            return self.forward_train(**batch_inputs)
+        if isinstance(batch_data_samples, dict):
+            return self.forward_train(**batch_data_samples)
+        raise TypeError('Unsupported batch format for loss().')
+
+    def predict(self, batch_inputs, batch_data_samples=None):
+        if isinstance(batch_inputs, dict):
+            return self.forward_test(**batch_inputs)
+        if isinstance(batch_data_samples, dict):
+            return self.forward_test(**batch_data_samples)
+        raise TypeError('Unsupported batch format for predict().')
+
+    def _forward(self, batch_inputs, batch_data_samples=None):
+        if isinstance(batch_inputs, dict):
+            return self.forward(**batch_inputs)
+        if isinstance(batch_data_samples, dict):
+            return self.forward(**batch_data_samples)
+        raise TypeError('Unsupported batch format for _forward().')
+
     def forward_test(self, points, img_metas, img=None, **kwargs):
         """
         Args:

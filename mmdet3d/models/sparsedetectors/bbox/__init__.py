@@ -1,3 +1,2 @@
-from .assigners import __all__
-from .coders import __all__
-from .match_costs import __all__
+# Keep sparse bbox package lightweight for training path imports.
+

@@ -8,6 +8,15 @@ export NCCL_ASYNC_ERROR_HANDLING=1
 # 先别禁 P2P
 # export NCCL_P2P_DISABLE=1
 
+if [ "$GPUS" -eq 1 ]; then
+    PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
+    python $(dirname "$0")/train.py \
+        $CONFIG \
+        --gpu-id 0 \
+        --launcher none ${@:3}
+    exit $?
+fi
+
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
 torchrun \
     --nproc_per_node=$GPUS \

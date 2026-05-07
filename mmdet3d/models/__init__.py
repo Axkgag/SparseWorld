@@ -7,13 +7,10 @@ from .builder import (BACKBONES, DETECTORS, FUSION_LAYERS, HEADS, LOSSES,
                       build_loss, build_middle_encoder, build_model,
                       build_neck, build_roi_extractor, build_shared_head,
                       build_voxel_encoder)
-from .detectors import *  # noqa: F401,F403
 from .necks import *  # noqa: F401,F403
-# from .nerf import *
-from .heads import *
-from .loss_utils import *
-from .modules import *
-from .sparsedetectors import *
+from .loss_utils import *  # noqa: F401,F403
+from .modules import *  # noqa: F401,F403
+from .sparsedetectors import *  # noqa: F401,F403
 __all__ = [
     'BACKBONES', 'NECKS', 'SHARED_HEADS', 'HEADS', 'LOSSES',
     'DETECTORS',

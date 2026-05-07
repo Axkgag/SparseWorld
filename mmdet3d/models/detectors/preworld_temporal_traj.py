@@ -13,7 +13,10 @@ import time
 
 from .loss import CE_ssc_loss, sem_scal_loss, geo_scal_loss, l1_loss, l2_loss
 from .lovasz_softmax import lovasz_softmax
-from IPython import embed
+try:
+    from IPython import embed
+except Exception:
+    embed = None
 
 from mmdet3d.models.heads import DownScaleModule3DCustom
 from mmdet3d.core.bbox import Box3DMode, Coord3DMode, LiDARInstance3DBoxes
@@ -555,4 +558,3 @@ class PreWorld4DTraj(BEVStereo4DOCC):
             voxel_feats = fused_voxel_feats.clone()  # recursive
 
         return losses
-

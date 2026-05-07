@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import mmcv
+import warnings
 
 import mmdet
 import mmseg
@@ -23,27 +24,32 @@ mmcv_maximum_version = '1.7.0'
 mmcv_version = digit_version(mmcv.__version__)
 
 
-assert (mmcv_version >= digit_version(mmcv_minimum_version)
-        and mmcv_version <= digit_version(mmcv_maximum_version)), \
-    f'MMCV=={mmcv.__version__} is used but incompatible. ' \
-    f'Please install mmcv>={mmcv_minimum_version}, <={mmcv_maximum_version}.'
+if not (mmcv_version >= digit_version(mmcv_minimum_version)
+        and mmcv_version <= digit_version(mmcv_maximum_version)):
+    warnings.warn(
+        f'MMCV=={mmcv.__version__} is outside the original supported range '
+        f'[{mmcv_minimum_version}, {mmcv_maximum_version}]. '
+        'Running with compatibility shims.',
+        UserWarning)
 
 mmdet_minimum_version = '2.24.0'
 mmdet_maximum_version = '3.0.0'
 mmdet_version = digit_version(mmdet.__version__)
-assert (mmdet_version >= digit_version(mmdet_minimum_version)
-        and mmdet_version <= digit_version(mmdet_maximum_version)), \
-    f'MMDET=={mmdet.__version__} is used but incompatible. ' \
-    f'Please install mmdet>={mmdet_minimum_version}, ' \
-    f'<={mmdet_maximum_version}.'
+if not (mmdet_version >= digit_version(mmdet_minimum_version)
+        and mmdet_version <= digit_version(mmdet_maximum_version)):
+    warnings.warn(
+        f'MMDET=={mmdet.__version__} is outside the original supported range '
+        f'[{mmdet_minimum_version}, {mmdet_maximum_version}].',
+        UserWarning)
 
 mmseg_minimum_version = '0.20.0'
 mmseg_maximum_version = '1.0.0'
 mmseg_version = digit_version(mmseg.__version__)
-assert (mmseg_version >= digit_version(mmseg_minimum_version)
-        and mmseg_version <= digit_version(mmseg_maximum_version)), \
-    f'MMSEG=={mmseg.__version__} is used but incompatible. ' \
-    f'Please install mmseg>={mmseg_minimum_version}, ' \
-    f'<={mmseg_maximum_version}.'
+if not (mmseg_version >= digit_version(mmseg_minimum_version)
+        and mmseg_version <= digit_version(mmseg_maximum_version)):
+    warnings.warn(
+        f'MMSEG=={mmseg.__version__} is outside the original supported range '
+        f'[{mmseg_minimum_version}, {mmseg_maximum_version}].',
+        UserWarning)
 
 __all__ = ['__version__', 'short_version']

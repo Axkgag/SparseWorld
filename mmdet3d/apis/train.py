@@ -12,16 +12,35 @@ from mmcv.utils import build_from_cfg
 from torch import distributed as dist
 
 from mmdet3d.datasets import build_dataset
-from mmdet3d.utils import find_latest_checkpoint
-from mmdet.core import DistEvalHook as MMDET_DistEvalHook
-from mmdet.core import EvalHook as MMDET_EvalHook
-from mmdet.datasets import build_dataloader as build_mmdet_dataloader
-from mmdet.datasets import replace_ImageToTensor
-from mmdet.utils import get_root_logger as get_mmdet_root_logger
-from mmseg.core import DistEvalHook as MMSEG_DistEvalHook
-from mmseg.core import EvalHook as MMSEG_EvalHook
-from mmseg.datasets import build_dataloader as build_mmseg_dataloader
-from mmseg.utils import get_root_logger as get_mmseg_root_logger
+from mmdet3d.utils.misc import find_latest_checkpoint
+try:
+    from mmdet.core import DistEvalHook as MMDET_DistEvalHook
+    from mmdet.core import EvalHook as MMDET_EvalHook
+except Exception:
+    from mmengine.hooks import Hook as MMDET_EvalHook
+    MMDET_DistEvalHook = MMDET_EvalHook
+try:
+    from mmdet.datasets import build_dataloader as build_mmdet_dataloader
+except Exception:
+    from mmdet3d.datasets import build_dataloader as build_mmdet_dataloader
+try:
+    from mmdet.datasets import replace_ImageToTensor
+except Exception:
+    replace_ImageToTensor = lambda pipeline: pipeline
+try:
+    from mmdet.utils import get_root_logger as get_mmdet_root_logger
+except Exception:
+    from mmdet3d.utils import get_root_logger as get_mmdet_root_logger
+try:
+    from mmseg.core import DistEvalHook as MMSEG_DistEvalHook
+    from mmseg.core import EvalHook as MMSEG_EvalHook
+    from mmseg.datasets import build_dataloader as build_mmseg_dataloader
+    from mmseg.utils import get_root_logger as get_mmseg_root_logger
+except Exception:
+    from mmengine.hooks import Hook as MMSEG_EvalHook
+    MMSEG_DistEvalHook = MMSEG_EvalHook
+    from mmdet3d.datasets import build_dataloader as build_mmseg_dataloader
+    get_mmseg_root_logger = get_mmdet_root_logger
 
 
 def init_random_seed(seed=None, device='cuda'):
